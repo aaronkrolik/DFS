@@ -18,7 +18,7 @@ import common.Constants.DiskOperationType;
 import common.INode;
 import dblockcache.DBuffer;
 
-public abstract class VirtualDisk implements IVirtualDisk {
+public class VirtualDisk implements IVirtualDisk {
 
 	private String _volName;
 	private RandomAccessFile _file;
@@ -124,8 +124,9 @@ public abstract class VirtualDisk implements IVirtualDisk {
 	}
 	
 	protected void readInMetadata() throws IOException{
-		_file.seek(0);
-		System.out.println("first read int"+ _file.readInt());
+		//_file.seek(0);
+		//System.out.println("first read int"+ _file.readInt());
+		//metadata is firs thing
 		_file.seek(0);
 		
 		byte[] byteArr = new byte[Constants.INODE_SIZE];
@@ -147,8 +148,18 @@ public abstract class VirtualDisk implements IVirtualDisk {
 	 * -- buf is an DBuffer object that needs to be read/write from/to the volume.	
 	 * -- operation is either READ or WRITE  
 	 */
-	public abstract void startRequest(DBuffer buf, DiskOperationType operation) throws IllegalArgumentException,
-			IOException;
+	public void startRequest(DBuffer buf, DiskOperationType operation) throws IllegalArgumentException,
+			IOException
+	{ 
+		buf.isBusy = true;
+		if(operation == DiskOperationType.READ){
+			readBlock(buf);
+		}
+		else{
+			writeBlock(buf);
+		}
+		buf.ioComplete();
+	}
 	
 	/*
 	 * Clear the contents of the disk by writing 0s to it

@@ -36,7 +36,7 @@ public class TestVirtualDisk {
 
 	@Test
 	public void firstTest() throws Exception {	
-		List<Integer> ints = new ArrayList<Integer>();
+		//List<Integer> ints = new ArrayList<Integer>();
 		File f = new File("TestFile.txt");
 		f.delete();
 		f.createNewFile();

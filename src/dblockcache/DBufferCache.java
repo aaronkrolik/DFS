@@ -1,32 +1,53 @@
 package dblockcache;
 
-import common.Constants;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public abstract class DBufferCache {
-	
-	private int _cacheSize;
-	
-	/*
-	 * Constructor: allocates a cacheSize number of cache blocks, each
-	 * containing BLOCK-size bytes data, in memory
-	 */
-	public DBufferCache(int cacheSize) {
-		_cacheSize = cacheSize * Constants.BLOCK_SIZE;
+import common.Constants.DiskOperationType;
+
+import virtualdisk.VirtualDisk;
+
+public class DBufferCache extends AbstractDBufferCache {
+	VirtualDisk vd;
+	LinkedHashMap<Integer, DBuffer> cache= new LinkedHashMap<Integer, DBuffer>();
+	public DBufferCache(int cacheSize, VirtualDisk vd) {
+		super(cacheSize);
+		this.vd = vd;
+		// TODO Auto-generated constructor stub
 	}
-	
-	/*
-	 * Get buffer for block specified by blockID. The buffer is "held" until the
-	 * caller releases it. A "held" buffer cannot be evicted: its block ID
-	 * cannot change.
-	 */
-	public abstract DBuffer getBlock(int blockID);
 
-	/* Release the buffer so that others waiting on it can use it */
-	public abstract void releaseBlock(DBuffer buf);
+	@Override
+	public DBuffer getBlock(int blockID) throws IllegalArgumentException, IOException {
+		// TODO Auto-generated method stub
+		DBuffer newBuff;
+		if(!cache.containsKey(blockID)){
+			newBuff=new DBuffer(blockID);
+			vd.startRequest(newBuff, DiskOperationType.READ);
+			//need to deal with Linked part -- make it MRU
+			cache.put(blockID,newBuff);
+			
+		}
+		newBuff = cache.get(blockID);
+		newBuff.isHeld = true;
+		return newBuff;
+	}
+
+	@Override
+	//WTF IS THIS
+	public void releaseBlock(DBuffer buf) {
+		buf.isHeld = false;
+	}
+
+	@Override
+	public void sync() throws IllegalArgumentException, IOException {
+		for(Integer i : cache.keySet()){
+			if(!cache.get(i).checkClean())
+			vd.startRequest(cache.get(i),DiskOperationType.WRITE);
+		}
+		// TODO Auto-generated method stub
+		
+	}
+
 	
-	/*
-	 * sync() writes back all dirty blocks to the volume and wait for completion.
-	 * The sync() method should maintain clean block copies in DBufferCache.
-	 */
-	public abstract void sync();
 }

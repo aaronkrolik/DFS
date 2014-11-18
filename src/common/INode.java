@@ -88,9 +88,9 @@ public class INode {
 		return pointers.length;
 	}
 	
-	public void initFromByteArray(byte[] byteArray) {
-		bytes = byteArray;
-		IntBuffer intBuf = ByteBuffer.wrap(byteArray)
+	public void initFromByteArray(byte[] initData) {
+		bytes = initData;
+		IntBuffer intBuf = ByteBuffer.wrap(initData)
 				.order(ByteOrder.BIG_ENDIAN).asIntBuffer();
 		int[] array = new int[intBuf.remaining()];
 		intBuf.get(pointers);
